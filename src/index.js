@@ -1,0 +1,49 @@
+import Book from "./models/Book.js";
+
+import { ApolloServer } from "@apollo/server";
+import { startStandaloneServer } from "@apollo/server/standalone";
+import { typeDefs } from "./graphql/typeDefs.js";
+import { resolvers } from "./graphql/resolvers.js";
+import { initPostgres } from "./db/sequelize.js";
+import Author from "./models/Author.js";
+import { initMongo } from "./db/mongoose.js";
+
+// The ApolloServer constructor requires two parameters: your schema
+// definition and your set of resolvers.
+const server = new ApolloServer({
+    typeDefs: typeDefs,
+    resolvers: resolvers,
+  });
+  
+  // Passing an ApolloServer instance to the `startStandaloneServer` function:
+  //  1. creates an Express app
+  //  2. installs your ApolloServer instance as middleware
+  //  3. prepares your app to handle incoming requests
+  const { url } = await startStandaloneServer(server, {
+    listen: { port: 4000 },
+  });
+  
+  console.log(`🚀  Server ready at: ${url}`);
+
+  initPostgres({Author, Book})
+  initMongo()
+
+// await sequelize.sync({ force: true });
+// console.log('All models were synchronized successfully.');
+
+// Book.sync()
+// const alchemist = await Book.create({title: "Power of Now", description: "A spiritual enlightenment Guide", published_date: new Date()})
+// console.log(alchemist instanceof Book); // true
+// console.log(alchemist.title);
+// console.log(alchemist.description);
+
+// Author.sync()
+// const hg = await Author.create({name: "J.K. Rowling", biography: "Creator of Harry Potter series books"})
+// console.log(hg instanceof Author); // true
+// console.log(hg.name);
+
+
+// Find all users
+// const books = await Book.findAll();
+// console.log(books.every(book => book instanceof Book)); // true
+// console.log('All books:', JSON.stringify(books, null, 2));
