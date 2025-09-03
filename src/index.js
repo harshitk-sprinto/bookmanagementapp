@@ -8,6 +8,9 @@ import { initPostgres } from "./db/sequelize.js";
 import Author from "./models/Author.js";
 import { initMongo } from "./db/mongoose.js";
 
+await initPostgres({ Author, Book });
+await initMongo();
+
 // The ApolloServer constructor requires two parameters: your schema
 // definition and your set of resolvers.
 const server = new ApolloServer({
@@ -24,9 +27,6 @@ const server = new ApolloServer({
   });
   
   console.log(`🚀  Server ready at: ${url}`);
-
-  initPostgres({Author, Book})
-  initMongo()
 
 // await sequelize.sync({ force: true });
 // console.log('All models were synchronized successfully.');

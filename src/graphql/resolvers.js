@@ -56,6 +56,7 @@ export const resolvers = {
         author: async function(_, {id}) {return await Author.findByPk(id)},
     },
     Mutation: {
-        addBook: async function(_, {title, author}) {return await Book.create({title})}
+        addBook: async function(_, {title, author}) {return await Book.create({title})},
+        addAuthor: async function(_, {name, biography}) {return await Author.create({name, biography})}
     }
 }

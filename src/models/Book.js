@@ -1,5 +1,6 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "../db/sequelize.js";
+import { BookMeta } from "./mongo/metadata.js";
 
 class Book extends Model {}
 
@@ -17,5 +18,17 @@ Book.init(
     underscored: true,
   }
 );
+
+Book.addHook("afterCreate", async (createdBook, options) => {
+  try {
+    await BookMeta.create({
+      bookId: createdBook.id,
+      averageRating: 0,
+      reviews: [],
+    });
+  } catch (error) {
+    console.error("Failed to create BookMeta for bookId", createdBook.id, error);
+  }
+});
 
 export default Book;
