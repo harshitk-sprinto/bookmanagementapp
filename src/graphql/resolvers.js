@@ -19,19 +19,25 @@ export const resolvers = {
             const { limit, offset } = toPageArgs({ page, pageSize });
             const where = {};
             if (filter.title) where.title = { [Op.iLike]: `%${filter.title}%` };
-            if (filter.authorId != null) where.author_id = filter.authorId;
             if (filter.publishedFrom || filter.publishedTo) {
             where.published_date = {};
             if (filter.publishedFrom) where.published_date[Op.gte] = filter.publishedFrom;
             if (filter.publishedTo) where.published_date[Op.lte] = filter.publishedTo;
             }
 
-            const { rows, count } = await Book.findAndCountAll({
-                where,
-                limit,
-                offset,
-                include: [{ model: Author, as: 'author' }]
-            });
+            const include = [];
+            if (filter.authorIds && filter.authorIds.length > 0) {
+                include.push({
+                    model: Author,
+                    as: 'authors',
+                    through: { attributes: [] },
+                    where: { id: { [Op.in]: filter.authorIds } }
+                });
+            } else {
+                include.push({ model: Author, as: 'authors', through: { attributes: [] } });
+            }
+
+            const { rows, count } = await Book.findAndCountAll({ where, limit, offset, include });
 
             return toConnection({ rows, count, page, pageSize });
         },
@@ -45,11 +51,7 @@ export const resolvers = {
             if (filter.bornTo) where.born_date[Op.lte] = filter.bornTo;
             }
             
-            const { rows, count } = await Author.findAndCountAll({
-            where,
-            limit,
-            offset,
-            });
+            const { rows, count } = await Author.findAndCountAll({ where, limit, offset });
             
             
             return toConnection({ rows, count, page, pageSize });
@@ -58,16 +60,22 @@ export const resolvers = {
     },
     Mutation: {
         createBook: async function(_, args) {
-            const { title, description, published_date, authorId } = args;
-            const book = await Book.create({ title, description, published_date, author_id: authorId ?? null });
-            return await Book.findByPk(book.id, { include: [{ model: Author, as: 'author' }] });
+            const { title, description, published_date, authorIds } = args;
+            const book = await Book.create({ title, description, published_date });
+            if (authorIds && authorIds.length > 0) {
+                await book.setAuthors(authorIds);
+            }
+            return await Book.findByPk(book.id, { include: [{ model: Author, as: 'authors', through: { attributes: [] } }] });
         },
         updateBook: async function(_, args) {
-            const { id, title, description, published_date, authorId } = args;
+            const { id, title, description, published_date, authorIds } = args;
             const book = await Book.findByPk(id);
             if (!book) throw new Error("Book not found");
-            await book.update({ title, description, published_date, author_id: authorId ?? book.author_id });
-            return await Book.findByPk(book.id, { include: [{ model: Author, as: 'author' }] });
+            await book.update({ title, description, published_date });
+            if (authorIds) {
+                await book.setAuthors(authorIds);
+            }
+            return await Book.findByPk(book.id, { include: [{ model: Author, as: 'authors', through: { attributes: [] } }] });
         },
         deleteBook: async function(_, { id }) {
             const book = await Book.findByPk(id);
@@ -93,31 +101,18 @@ export const resolvers = {
             await author.destroy();
             return true;
         },
-        setBookAuthor: async function(_, { bookId, authorId }) {
-            const book = await Book.findByPk(bookId);
-            if (!book) throw new Error("Book not found");
-            const author = await Author.findByPk(authorId);
-            if (!author) throw new Error("Author not found");
-            await book.update({ author_id: author.id });
-            return await Book.findByPk(book.id, { include: [{ model: Author, as: 'author' }] });
-        },
-        removeBookAuthor: async function(_, { bookId }) {
-            const book = await Book.findByPk(bookId);
-            if (!book) throw new Error("Book not found");
-            await book.update({ author_id: null });
-            return await Book.findByPk(book.id, { include: [{ model: Author, as: 'author' }] });
-        }
+
     },
     Author: {
         books: async (author) => {
-            return await Book.findAll({ where: { author_id: author.id } });
+            const instance = await Author.findByPk(author.id);
+            return await instance.getBooks();
         }
     },
     Book: {
-        author: async (book) => {
-            if (book.author) return book.author;
-            if (!book.author_id) return null;
-            return await Author.findByPk(book.author_id);
+        authors: async (book) => {
+            const instance = await Book.findByPk(book.id);
+            return await instance.getAuthors();
         }
     }
 }

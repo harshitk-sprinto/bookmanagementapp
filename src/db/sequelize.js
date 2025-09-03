@@ -10,9 +10,19 @@ export const sequelize = new Sequelize(process.env.PGDATABASE, process.env.PGUSE
 });
 
 export async function initPostgres(models) {
-  const { Author, Book } = models;
-  Author.hasMany(Book, { foreignKey: 'author_id', as: 'books' });
-  Book.belongsTo(Author, { foreignKey: 'author_id', as: 'author' });
+  const { Author, Book, AuthorBook } = models;
+  Author.belongsToMany(Book, {
+    through: AuthorBook,
+    foreignKey: 'author_id',
+    otherKey: 'book_id',
+    as: 'books'
+  });
+  Book.belongsToMany(Author, {
+    through: AuthorBook,
+    foreignKey: 'book_id',
+    otherKey: 'author_id',
+    as: 'authors'
+  });
 
   await sequelize.authenticate();
   await sequelize.sync();

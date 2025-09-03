@@ -12,7 +12,7 @@ export const typeDefs = `#graphql
 
   input BookFilter {
     title: String
-    authorId: Int
+    authorIds: [Int!]
     publishedFrom: Date
     publishedTo: Date
   }
@@ -46,7 +46,7 @@ export const typeDefs = `#graphql
     title: String
     description: String
     published_date: Date
-    author: Author
+    authors: [Author]
   }
 
   type Query {
@@ -61,7 +61,7 @@ export const typeDefs = `#graphql
       title: String!
       description: String
       published_date: Date
-      authorId: Int
+      authorIds: [Int!]
     ): Book!
 
     updateBook(
@@ -69,7 +69,7 @@ export const typeDefs = `#graphql
       title: String
       description: String
       published_date: Date
-      authorId: Int
+      authorIds: [Int!]
     ): Book!
 
     deleteBook(id: ID!): Boolean!
@@ -89,7 +89,5 @@ export const typeDefs = `#graphql
 
     deleteAuthor(id: ID!): Boolean!
 
-    setBookAuthor(bookId: ID!, authorId: ID!): Book!
-    removeBookAuthor(bookId: ID!): Book!
   }
 `;

@@ -10,7 +10,6 @@ Book.init(
     title: { type: DataTypes.STRING, allowNull: false },
     description: { type: DataTypes.TEXT },
     published_date: { type: DataTypes.DATEONLY },
-    author_id: { type: DataTypes.INTEGER, allowNull: true },
   },
   {
     sequelize,

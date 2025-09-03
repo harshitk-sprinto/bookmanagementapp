@@ -7,8 +7,9 @@ import { resolvers } from "./graphql/resolvers.js";
 import { initPostgres } from "./db/sequelize.js";
 import Author from "./models/Author.js";
 import { initMongo } from "./db/mongoose.js";
+import AuthorBook from "./models/AuthorBook.js";
 
-await initPostgres({ Author, Book });
+await initPostgres({ Author, Book, AuthorBook });
 await initMongo();
 
 // The ApolloServer constructor requires two parameters: your schema
