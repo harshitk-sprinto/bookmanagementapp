@@ -57,7 +57,39 @@ export const typeDefs = `#graphql
   }
 
   type Mutation {
-  addBook(title: String, author: String): Book
-  addAuthor(name: String, biography: String): Author
-}
+    createBook(
+      title: String!
+      description: String
+      published_date: Date
+      authorId: Int
+    ): Book!
+
+    updateBook(
+      id: ID!
+      title: String
+      description: String
+      published_date: Date
+      authorId: Int
+    ): Book!
+
+    deleteBook(id: ID!): Boolean!
+
+    createAuthor(
+      name: String!
+      biography: String
+      born_date: Date
+    ): Author!
+
+    updateAuthor(
+      id: ID!
+      name: String
+      biography: String
+      born_date: Date
+    ): Author!
+
+    deleteAuthor(id: ID!): Boolean!
+
+    setBookAuthor(bookId: ID!, authorId: ID!): Book!
+    removeBookAuthor(bookId: ID!): Book!
+  }
 `;

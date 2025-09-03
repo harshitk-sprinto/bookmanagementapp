@@ -1,7 +1,8 @@
-import { GraphQLScalarType } from "graphql";
+import { GraphQLScalarType, Kind } from "graphql";
 import Author from "../models/Author.js";
 import Book from "../models/Book.js";
 import { toConnection, toPageArgs } from "../utils/pagination.js";
+import { Op } from "sequelize";
 
 const dateScalar = new GraphQLScalarType({
     name: 'Date',
@@ -56,7 +57,67 @@ export const resolvers = {
         author: async function(_, {id}) {return await Author.findByPk(id)},
     },
     Mutation: {
-        addBook: async function(_, {title, author}) {return await Book.create({title})},
-        addAuthor: async function(_, {name, biography}) {return await Author.create({name, biography})}
+        createBook: async function(_, args) {
+            const { title, description, published_date, authorId } = args;
+            const book = await Book.create({ title, description, published_date, author_id: authorId ?? null });
+            return await Book.findByPk(book.id, { include: [{ model: Author, as: 'author' }] });
+        },
+        updateBook: async function(_, args) {
+            const { id, title, description, published_date, authorId } = args;
+            const book = await Book.findByPk(id);
+            if (!book) throw new Error("Book not found");
+            await book.update({ title, description, published_date, author_id: authorId ?? book.author_id });
+            return await Book.findByPk(book.id, { include: [{ model: Author, as: 'author' }] });
+        },
+        deleteBook: async function(_, { id }) {
+            const book = await Book.findByPk(id);
+            if (!book) return false;
+            await book.destroy();
+            return true;
+        },
+        createAuthor: async function(_, args) {
+            const { name, biography, born_date } = args;
+            const author = await Author.create({ name, biography, born_date });
+            return author;
+        },
+        updateAuthor: async function(_, args) {
+            const { id, name, biography, born_date } = args;
+            const author = await Author.findByPk(id);
+            if (!author) throw new Error("Author not found");
+            await author.update({ name, biography, born_date });
+            return author;
+        },
+        deleteAuthor: async function(_, { id }) {
+            const author = await Author.findByPk(id);
+            if (!author) return false;
+            await author.destroy();
+            return true;
+        },
+        setBookAuthor: async function(_, { bookId, authorId }) {
+            const book = await Book.findByPk(bookId);
+            if (!book) throw new Error("Book not found");
+            const author = await Author.findByPk(authorId);
+            if (!author) throw new Error("Author not found");
+            await book.update({ author_id: author.id });
+            return await Book.findByPk(book.id, { include: [{ model: Author, as: 'author' }] });
+        },
+        removeBookAuthor: async function(_, { bookId }) {
+            const book = await Book.findByPk(bookId);
+            if (!book) throw new Error("Book not found");
+            await book.update({ author_id: null });
+            return await Book.findByPk(book.id, { include: [{ model: Author, as: 'author' }] });
+        }
+    },
+    Author: {
+        books: async (author) => {
+            return await Book.findAll({ where: { author_id: author.id } });
+        }
+    },
+    Book: {
+        author: async (book) => {
+            if (book.author) return book.author;
+            if (!book.author_id) return null;
+            return await Author.findByPk(book.author_id);
+        }
     }
 }
