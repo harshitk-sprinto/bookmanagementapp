@@ -8,26 +8,39 @@ import { initPostgres } from "./db/sequelize.js";
 import Author from "./models/Author.js";
 import { initMongo } from "./db/mongoose.js";
 import AuthorBook from "./models/AuthorBook.js";
+import express from "express";
+import http from 'http';
+import cors from 'cors';
+import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
+import { expressMiddleware } from "@as-integrations/express5";
 
 await initPostgres({ Author, Book, AuthorBook });
 await initMongo();
 
-// The ApolloServer constructor requires two parameters: your schema
-// definition and your set of resolvers.
+const app = express()
+const httpServer = http.createServer(app);
+
 const server = new ApolloServer({
-    typeDefs: typeDefs,
-    resolvers: resolvers,
-  });
-  
-  // Passing an ApolloServer instance to the `startStandaloneServer` function:
-  //  1. creates an Express app
-  //  2. installs your ApolloServer instance as middleware
-  //  3. prepares your app to handle incoming requests
-  const { url } = await startStandaloneServer(server, {
-    listen: { port: process.env.PORT || 4000 },
-  });
-  
-  console.log(`🚀  Server ready at: ${url}`);
+  typeDefs,
+  resolvers,
+  plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+});
+
+await server.start();
+
+app.use(
+  '/api/graphql',
+  cors(),
+  express.json(),
+  expressMiddleware(server, {
+    context: async ({ req }) => ({ token: req.headers.token }),
+  }),
+);
+
+await new Promise((resolve) =>
+  httpServer.listen({ port: process.env.PORT || 4000 }, resolve),
+);
+console.log(`🚀 Server ready at ${process.env.PORT || 4000}`);
 
 // await sequelize.sync({ force: true });
 // console.log('All models were synchronized successfully.');
