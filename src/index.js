@@ -42,6 +42,11 @@ await new Promise((resolve) =>
 );
 console.log(`🚀 Server ready at ${process.env.PORT || 4000}`);
 
+app.get('/', (req, res) => {
+  res.send('Server is running. Use /api/graphql for GraphQL queries.');
+});
+
+
 // await sequelize.sync({ force: true });
 // console.log('All models were synchronized successfully.');
 
