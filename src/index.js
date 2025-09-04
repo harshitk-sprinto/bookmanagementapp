@@ -1,7 +1,6 @@
 import Book from "./models/Book.js";
 
 import { ApolloServer } from "@apollo/server";
-import { startStandaloneServer } from "@apollo/server/standalone";
 import { typeDefs } from "./graphql/typeDefs.js";
 import { resolvers } from "./graphql/resolvers.js";
 import { initPostgres } from "./db/sequelize.js";
@@ -40,29 +39,8 @@ app.use(
 await new Promise((resolve) =>
   httpServer.listen({ port: process.env.PORT || 4000 }, resolve),
 );
-console.log(`🚀 Server ready at ${process.env.PORT || 4000}`);
+console.log(`Server ready at ${process.env.PORT || 4000}`);
 
 app.get('/', (req, res) => {
   res.send('Server is running. Use /api/graphql for GraphQL queries.');
 });
-
-
-// await sequelize.sync({ force: true });
-// console.log('All models were synchronized successfully.');
-
-// Book.sync()
-// const alchemist = await Book.create({title: "Power of Now", description: "A spiritual enlightenment Guide", published_date: new Date()})
-// console.log(alchemist instanceof Book); // true
-// console.log(alchemist.title);
-// console.log(alchemist.description);
-
-// Author.sync()
-// const hg = await Author.create({name: "J.K. Rowling", biography: "Creator of Harry Potter series books"})
-// console.log(hg instanceof Author); // true
-// console.log(hg.name);
-
-
-// Find all users
-// const books = await Book.findAll();
-// console.log(books.every(book => book instanceof Book)); // true
-// console.log('All books:', JSON.stringify(books, null, 2));
