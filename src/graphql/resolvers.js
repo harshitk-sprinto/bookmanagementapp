@@ -3,6 +3,7 @@ import Author from "../models/Author.js";
 import Book from "../models/Book.js";
 import { toConnection, toPageArgs } from "../utils/pagination.js";
 import { Op } from "sequelize";
+import { BookMeta, AuthorMeta } from "../models/mongo/metadata.js";
 
 const dateScalar = new GraphQLScalarType({
     name: 'Date',
@@ -110,12 +111,46 @@ export const resolvers = {
         books: async (author) => {
             const instance = await Author.findByPk(author.id);
             return await instance.getBooks();
+        },
+        metadata: async (author) => {
+            const meta = await AuthorMeta.findOne({ authorId: author.id }).lean();
+            if (!meta) return null;
+            return {
+                authorId: meta.authorId,
+                averageRating: meta.averageRating ?? null,
+                reviews: (meta.reviews || []).map(r => ({
+                    reviewer: r.reviewer,
+                    comment: r.comment,
+                    rating: r.rating,
+                    createdAt: r.createdAt,
+                    updatedAt: r.updatedAt,
+                })),
+                createdAt: meta.createdAt,
+                updatedAt: meta.updatedAt,
+            };
         }
     },
     Book: {
         authors: async (book) => {
             const instance = await Book.findByPk(book.id);
             return await instance.getAuthors();
+        },
+        metadata: async (book) => {
+            const meta = await BookMeta.findOne({ bookId: book.id }).lean();
+            if (!meta) return null;
+            return {
+                bookId: meta.bookId,
+                averageRating: meta.averageRating ?? null,
+                reviews: (meta.reviews || []).map(r => ({
+                    reviewer: r.reviewer,
+                    comment: r.comment,
+                    rating: r.rating,
+                    createdAt: r.createdAt,
+                    updatedAt: r.updatedAt,
+                })),
+                createdAt: meta.createdAt,
+                updatedAt: meta.updatedAt,
+            };
         }
     }
 }

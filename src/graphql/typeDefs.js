@@ -40,6 +40,7 @@ export const typeDefs = `#graphql
     biography: String
     born_date: Date
     books: [Book]
+    metadata: AuthorMetadata
   }
 
   type Book {
@@ -48,6 +49,31 @@ export const typeDefs = `#graphql
     description: String
     published_date: Date
     authors: [Author]
+    metadata: BookMetadata
+  }
+
+  type Review {
+    reviewer: String
+    comment: String
+    rating: Int
+    createdAt: Date
+    updatedAt: Date
+  }
+
+  type BookMetadata {
+    bookId: Int!
+    averageRating: Int
+    reviews: [Review!]!
+    createdAt: Date
+    updatedAt: Date
+  }
+
+  type AuthorMetadata {
+    authorId: Int!
+    averageRating: Int
+    reviews: [Review!]!
+    createdAt: Date
+    updatedAt: Date
   }
 
   type Query {
