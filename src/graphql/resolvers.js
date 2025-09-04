@@ -45,10 +45,13 @@ export const resolvers = {
             const { limit, offset } = toPageArgs({ page, pageSize });
             const where = {};
             if (filter.name) where.name = { [Op.iLike]: `%${filter.name}%` };
-            if (filter.bornFrom || filter.bornTo) {
+            if (filter.bornYear) {
             where.born_date = {};
-            if (filter.bornFrom) where.born_date[Op.gte] = filter.bornFrom;
-            if (filter.bornTo) where.born_date[Op.lte] = filter.bornTo;
+            if (filter.bornYear) {
+                const y = filter.bornYear;
+                where.born_date[Op.gte] = new Date(Date.UTC(y, 0, 1));
+                where.born_date[Op.lte] = new Date(Date.UTC(y, 11, 31, 23, 59, 59, 999));
+            }
             }
             
             const { rows, count } = await Author.findAndCountAll({ where, limit, offset });

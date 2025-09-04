@@ -19,6 +19,7 @@ export const typeDefs = `#graphql
 
   input AuthorFilter {
     name: String
+    bornYear: Int
     bornFrom: Date
     bornTo: Date
   }
